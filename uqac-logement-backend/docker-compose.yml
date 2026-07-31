@@ -1,0 +1,16 @@
+services:
+  postgres:
+    image: postgis/postgis:16-3.4
+    container_name: uqac_logement_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: uqac
+      POSTGRES_PASSWORD: uqac_password
+      POSTGRES_DB: uqac_logement
+    ports:
+      - "5432:5432"
+    volumes:
+      - uqac_logement_pgdata:/var/lib/postgresql/data
+
+volumes:
+  uqac_logement_pgdata:
