@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { api, Listing, ApiError } from "@/lib/api";
 import { ListingCard } from "@/components/ListingCard";
+import { HeroCarousel } from "@/components/HeroCarousel";
 
 const TYPES = [
   { value: "", label: "Tous les types" },
@@ -44,22 +45,8 @@ export default function HomePage() {
 
   return (
     <div>
-      {/* Bandeau d'intro */}
-      <section className="border-b border-border bg-surface">
-        <div className="mx-auto max-w-6xl px-6 py-12">
-          <h1 className="font-display text-4xl font-semibold leading-tight text-ink sm:text-5xl">
-            Ton prochain chez-toi,
-            <br />
-            <span className="italic text-primary">à distance de marche</span>{" "}
-            de l&apos;UQAC.
-          </h1>
-          <p className="mt-4 max-w-xl text-ink-muted">
-            Chambres, studios et appartements publiés directement par des
-            propriétaires du Saguenay — avec la distance réelle du campus
-            affichée sur chaque annonce.
-          </p>
-        </div>
-      </section>
+      {/* Carrousel héro */}
+      <HeroCarousel />
 
       {/* Filtres */}
       <section className="border-b border-border bg-paper">

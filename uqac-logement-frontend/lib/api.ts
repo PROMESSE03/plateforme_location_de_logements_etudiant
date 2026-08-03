@@ -115,6 +115,43 @@ export const api = {
 
   rejectListing: (id: string, token: string) =>
     request<Listing>(`/listings/${id}/reject`, { method: "PATCH", token }),
+
+  deleteListing: (id: string, token: string) =>
+    request<void>(`/listings/${id}`, { method: "DELETE", token }),
+
+  // Upload de fichiers : différent des autres appels car on envoie du
+  // multipart/form-data, pas du JSON — le navigateur doit fixer lui-même
+  // l'en-tête Content-Type (avec la "boundary"), donc pas via request().
+  async uploadPhotos(id: string, files: File[], token: string): Promise<Listing> {
+    const formData = new FormData();
+    files.forEach((file) => formData.append("photos", file));
+
+    const res = await fetch(`${API_URL}/listings/${id}/photos`, {
+      method: "POST",
+      headers: { Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    const data = await res.json().catch(() => null);
+    if (!res.ok) {
+      const message = data?.message ?? `Erreur ${res.status}`;
+      throw new ApiError(res.status, Array.isArray(message) ? message.join(", ") : message);
+    }
+    return data as Listing;
+  },
+
+  deletePhoto: (listingId: string, photoId: string, token: string) =>
+    request<Listing>(`/listings/${listingId}/photos/${photoId}`, {
+      method: "DELETE",
+      token,
+    }),
 };
 
 export { API_URL };
+
+// Les photos sont stockées avec une URL relative (ex: /uploads/listings/x.jpg)
+// qui pointe vers le BACKEND, pas le frontend — il faut donc préfixer avec
+// l'adresse de l'API pour que <img src=...> fonctionne.
+export function photoUrl(path: string): string {
+  return `${API_URL}${path}`;
+}

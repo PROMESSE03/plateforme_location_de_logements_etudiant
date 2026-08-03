@@ -116,4 +116,14 @@ export class ListingsController {
     const urls = files.map((f) => `/uploads/listings/${f.filename}`);
     return this.listingsService.addPhotos(id, user, urls);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Delete(':id/photos/:photoId')
+  removePhoto(
+    @Param('id') id: string,
+    @Param('photoId') photoId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.listingsService.removePhoto(id, photoId, user);
+  }
 }

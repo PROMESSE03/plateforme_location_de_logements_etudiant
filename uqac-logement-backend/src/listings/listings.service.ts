@@ -189,4 +189,25 @@ export class ListingsService {
     await this.photosRepo.save(newPhotos);
     return this.findByIdOrFail(id);
   }
+
+  async removePhoto(
+    id: string,
+    photoId: string,
+    user: User,
+  ): Promise<Listing> {
+    const listing = await this.findByIdOrFail(id);
+    if (!this.isOwnerOf(listing, user) && !this.isAdmin(user)) {
+      throw new ForbiddenException(
+        "Vous ne pouvez supprimer que les photos de vos propres annonces",
+      );
+    }
+
+    const photo = listing.photos?.find((p) => p.id === photoId);
+    if (!photo) {
+      throw new NotFoundException('Photo introuvable sur cette annonce');
+    }
+
+    await this.photosRepo.remove(photo);
+    return this.findByIdOrFail(id);
+  }
 }

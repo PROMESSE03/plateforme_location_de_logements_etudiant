@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Listing } from "@/lib/api";
+import { Listing, photoUrl } from "@/lib/api";
 import { distanceFromUqacKm, formatDistance } from "@/lib/uqac";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -22,7 +22,7 @@ export function ListingCard({ listing }: { listing: Listing }) {
         {photo ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={photo.url}
+            src={photoUrl(photo.url)}
             alt={listing.titre}
             className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
           />

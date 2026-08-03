@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, Listing, ApiError } from "@/lib/api";
+import { api, Listing, ApiError, photoUrl } from "@/lib/api";
 import { distanceFromUqacKm, formatDistance } from "@/lib/uqac";
 
 const TYPE_LABELS: Record<string, string> = {
@@ -69,7 +69,7 @@ export default function ListingDetailPage() {
           {currentPhoto ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
-              src={currentPhoto.url}
+              src={photoUrl(currentPhoto.url)}
               alt={listing.titre}
               className="h-full w-full object-cover"
             />
@@ -93,7 +93,7 @@ export default function ListingDetailPage() {
                 }`}
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={p.url} alt="" className="h-full w-full object-cover" />
+                <img src={photoUrl(p.url)} alt="" className="h-full w-full object-cover" />
               </button>
             ))}
           </div>

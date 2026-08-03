@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { api, ApiError } from "@/lib/api";
+import { geocodeAddress, GeocodeResult } from "@/lib/geocode";
 
 export default function NewListingPage() {
   const router = useRouter();
@@ -13,11 +14,13 @@ export default function NewListingPage() {
   const [description, setDescription] = useState("");
   const [prix, setPrix] = useState("");
   const [adresse, setAdresse] = useState("");
-  const [latitude, setLatitude] = useState("");
-  const [longitude, setLongitude] = useState("");
   const [typeLogement, setTypeLogement] = useState("chambre");
   const [nbChambres, setNbChambres] = useState("1");
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [photoPreviews, setPhotoPreviews] = useState<string[]>([]);
 
+  const [geocoded, setGeocoded] = useState<GeocodeResult | null>(null);
+  const [geocoding, setGeocoding] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
@@ -26,31 +29,82 @@ export default function NewListingPage() {
     if (!authLoading && !user) router.push("/login");
   }, [authLoading, user, router]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  // Nettoyage des aperçus (URL.createObjectURL) pour éviter les fuites mémoire
+  useEffect(() => {
+    return () => photoPreviews.forEach((url) => URL.revokeObjectURL(url));
+  }, [photoPreviews]);
+
+  function handlePhotoChange(files: FileList | null) {
+    if (!files) return;
+    const fileArray = Array.from(files);
+    setPhotos(fileArray);
+    photoPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setPhotoPreviews(fileArray.map((f) => URL.createObjectURL(f)));
+  }
+
+  // Étape 1 : on cherche l'adresse tapée pour trouver sa position exacte,
+  // et on demande une confirmation avant de publier (l'utilisateur n'a
+  // jamais à connaître latitude/longitude lui-même).
+  async function handleVerifyAddress(e: React.FormEvent) {
     e.preventDefault();
-    if (!token) return;
+    setError(null);
+    setGeocoding(true);
+    try {
+      const result = await geocodeAddress(adresse);
+      setGeocoded(result);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Adresse introuvable");
+    } finally {
+      setGeocoding(false);
+    }
+  }
+
+  // Étape 2 : l'utilisateur confirme que l'adresse trouvée est la bonne.
+  // On crée l'annonce, PUIS on envoie les photos si l'utilisateur en a
+  // choisi (deux appels séparés côté serveur, mais un seul geste pour
+  // l'utilisateur).
+  async function handleConfirmPublish() {
+    if (!token || !geocoded) return;
     setError(null);
     setSubmitting(true);
     try {
-      await api.createListing(
+      const listing = await api.createListing(
         {
           titre,
           description,
           prix: Number(prix),
           adresse,
-          latitude: Number(latitude),
-          longitude: Number(longitude),
+          latitude: geocoded.latitude,
+          longitude: geocoded.longitude,
           typeLogement,
           nbChambres: Number(nbChambres),
         },
         token,
       );
+
+      if (photos.length > 0) {
+        await api.uploadPhotos(listing.id, photos, token);
+      }
+
       setSuccess(true);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "Une erreur est survenue");
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function resetForm() {
+    setSuccess(false);
+    setTitre("");
+    setDescription("");
+    setPrix("");
+    setAdresse("");
+    setNbChambres("1");
+    setGeocoded(null);
+    photoPreviews.forEach((url) => URL.revokeObjectURL(url));
+    setPhotos([]);
+    setPhotoPreviews([]);
   }
 
   if (authLoading || !user) return null;
@@ -78,16 +132,7 @@ export default function NewListingPage() {
             Voir mes annonces
           </button>
           <button
-            onClick={() => {
-              setSuccess(false);
-              setTitre("");
-              setDescription("");
-              setPrix("");
-              setAdresse("");
-              setLatitude("");
-              setLongitude("");
-              setNbChambres("1");
-            }}
+            onClick={resetForm}
             className="rounded-full border border-border px-5 py-2.5 font-medium text-ink hover:border-ink"
           >
             Publier une autre annonce
@@ -107,15 +152,16 @@ export default function NewListingPage() {
         administrateur.
       </p>
 
-      <form onSubmit={handleSubmit} className="mt-8 flex flex-col gap-5">
+      <form onSubmit={handleVerifyAddress} className="mt-8 flex flex-col gap-5">
         <label className="flex flex-col gap-1.5">
           <span className="text-sm font-medium text-ink">Titre</span>
           <input
             required
+            disabled={!!geocoded}
             value={titre}
             onChange={(e) => setTitre(e.target.value)}
             placeholder="Chambre lumineuse proche UQAC"
-            className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
+            className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary disabled:bg-paper disabled:text-ink-muted"
           />
         </label>
 
@@ -123,32 +169,35 @@ export default function NewListingPage() {
           <span className="text-sm font-medium text-ink">Description</span>
           <textarea
             required
+            disabled={!!geocoded}
             rows={4}
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            className="resize-none rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
+            className="resize-none rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary disabled:bg-paper disabled:text-ink-muted"
           />
         </label>
 
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-ink">Prix / mois ($)</span>
             <input
               type="number"
               required
+              disabled={!!geocoded}
               min={0}
               value={prix}
               onChange={(e) => setPrix(e.target.value)}
-              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary disabled:bg-paper disabled:text-ink-muted"
             />
           </label>
 
           <label className="flex flex-col gap-1.5">
             <span className="text-sm font-medium text-ink">Type de logement</span>
             <select
+              disabled={!!geocoded}
               value={typeLogement}
               onChange={(e) => setTypeLogement(e.target.value)}
-              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
+              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary disabled:bg-paper disabled:text-ink-muted"
             >
               <option value="chambre">Chambre</option>
               <option value="studio">Studio</option>
@@ -162,55 +211,57 @@ export default function NewListingPage() {
           <span className="text-sm font-medium text-ink">Adresse</span>
           <input
             required
+            disabled={!!geocoded}
             value={adresse}
             onChange={(e) => setAdresse(e.target.value)}
             placeholder="123 rue Université, Chicoutimi"
-            className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
+            className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary disabled:bg-paper disabled:text-ink-muted"
+          />
+          <span className="text-xs text-ink-muted">
+            Pas besoin de coordonnées GPS — on les trouve automatiquement à
+            partir de ton adresse.
+          </span>
+        </label>
+
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink">Nb. chambres</span>
+          <input
+            type="number"
+            min={0}
+            required
+            disabled={!!geocoded}
+            value={nbChambres}
+            onChange={(e) => setNbChambres(e.target.value)}
+            className="w-32 rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary disabled:bg-paper disabled:text-ink-muted"
           />
         </label>
 
-        <div className="grid grid-cols-3 gap-4">
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink">Latitude</span>
-            <input
-              type="number"
-              step="any"
-              required
-              value={latitude}
-              onChange={(e) => setLatitude(e.target.value)}
-              placeholder="48.421"
-              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink">Longitude</span>
-            <input
-              type="number"
-              step="any"
-              required
-              value={longitude}
-              onChange={(e) => setLongitude(e.target.value)}
-              placeholder="-71.053"
-              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
-            />
-          </label>
-          <label className="flex flex-col gap-1.5">
-            <span className="text-sm font-medium text-ink">Nb. chambres</span>
-            <input
-              type="number"
-              min={0}
-              required
-              value={nbChambres}
-              onChange={(e) => setNbChambres(e.target.value)}
-              className="rounded-lg border border-border bg-surface px-3.5 py-2.5 text-ink outline-none focus:border-primary"
-            />
-          </label>
-        </div>
-        <p className="-mt-2 text-xs text-ink-muted">
-          Astuce : trouve les coordonnées exactes de ton adresse sur Google
-          Maps (clic droit sur le point → les chiffres copiés sont
-          latitude, longitude).
-        </p>
+        <label className="flex flex-col gap-1.5">
+          <span className="text-sm font-medium text-ink">
+            Photos (optionnel, tu peux en choisir plusieurs)
+          </span>
+          <input
+            type="file"
+            accept="image/jpeg,image/png,image/webp"
+            multiple
+            disabled={!!geocoded}
+            onChange={(e) => handlePhotoChange(e.target.files)}
+            className="text-sm text-ink-muted file:mr-3 file:rounded-full file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-primary-dark disabled:opacity-60"
+          />
+          {photoPreviews.length > 0 && (
+            <div className="mt-2 flex flex-wrap gap-2">
+              {photoPreviews.map((url, i) => (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  key={i}
+                  src={url}
+                  alt=""
+                  className="h-16 w-16 rounded-lg object-cover"
+                />
+              ))}
+            </div>
+          )}
+        </label>
 
         {error && (
           <p className="rounded-lg bg-danger-bg px-3.5 py-2.5 text-sm text-danger">
@@ -218,13 +269,46 @@ export default function NewListingPage() {
           </p>
         )}
 
-        <button
-          type="submit"
-          disabled={submitting}
-          className="mt-2 self-start rounded-full bg-primary px-6 py-2.5 font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
-        >
-          {submitting ? "Publication..." : "Publier l'annonce"}
-        </button>
+        {!geocoded && (
+          <button
+            type="submit"
+            disabled={geocoding}
+            className="mt-2 self-start rounded-full bg-primary px-6 py-2.5 font-medium text-white transition-colors hover:bg-primary-dark disabled:opacity-60"
+          >
+            {geocoding ? "Recherche de l'adresse..." : "Vérifier l'adresse"}
+          </button>
+        )}
+
+        {geocoded && (
+          <div className="rounded-xl border border-success bg-success-bg p-4">
+            <p className="text-sm font-medium text-success">Adresse trouvée :</p>
+            <p className="mt-1 text-sm text-ink">{geocoded.displayName}</p>
+            <p className="mt-3 text-xs text-ink-muted">
+              Données de localisation © contributeurs OpenStreetMap
+            </p>
+            <div className="mt-4 flex gap-3">
+              <button
+                type="button"
+                onClick={handleConfirmPublish}
+                disabled={submitting}
+                className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-white hover:bg-primary-dark disabled:opacity-60"
+              >
+                {submitting
+                  ? photos.length > 0
+                    ? "Publication et envoi des photos..."
+                    : "Publication..."
+                  : "Oui, publier l'annonce"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setGeocoded(null)}
+                className="rounded-full border border-border px-5 py-2.5 text-sm font-medium text-ink hover:border-ink"
+              >
+                Ce n&apos;est pas la bonne adresse
+              </button>
+            </div>
+          </div>
+        )}
       </form>
     </div>
   );
