@@ -147,6 +147,90 @@ export const api = {
     }),
 };
 
+// ============ ROOMS ============
+export interface Room {
+  id: string;
+  nom: string;
+  prix: string;
+  statut: "disponible" | "occupee";
+  createdAt: string;
+}
+
+export const roomsApi = {
+  listByListing: (listingId: string, token: string) =>
+    request<Room[]>(`/listings/${listingId}/rooms`, { token }),
+
+  create: (
+    listingId: string,
+    body: { nom: string; prix: number },
+    token: string,
+  ) => request<Room>(`/listings/${listingId}/rooms`, { method: "POST", body, token }),
+
+  remove: (roomId: string, token: string) =>
+    request<void>(`/rooms/${roomId}`, { method: "DELETE", token }),
+};
+
+// ============ TENANCIES ============
+export interface Tenancy {
+  id: string;
+  tenant: { id: string; nom: string; email: string };
+  room: Room;
+  dateDebut: string;
+  dateFin: string | null;
+  loyerMensuel: string;
+  jourEcheance: number;
+  statut: "active" | "terminee";
+}
+
+export const tenanciesApi = {
+  listByRoom: (roomId: string, token: string) =>
+    request<Tenancy[]>(`/rooms/${roomId}/tenancies`, { token }),
+
+  create: (
+    roomId: string,
+    body: {
+      tenantEmail: string;
+      dateDebut: string;
+      loyerMensuel: number;
+      jourEcheance?: number;
+    },
+    token: string,
+  ) => request<Tenancy>(`/rooms/${roomId}/tenancies`, { method: "POST", body, token }),
+
+  terminate: (tenancyId: string, token: string) =>
+    request<Tenancy>(`/tenancies/${tenancyId}/terminate`, { method: "PATCH", token }),
+};
+
+// ============ PAYMENTS ============
+export interface Payment {
+  id: string;
+  mois: string;
+  montant: string;
+  statut: "en_attente" | "paye" | "en_retard";
+  methode: "interac" | "comptant" | null;
+  datePaiement: string | null;
+}
+
+export interface PaymentSummaryRow {
+  room: { id: string; nom: string };
+  tenant: { id: string; nom: string; email: string } | null;
+  payment: Payment | null;
+}
+
+export const paymentsApi = {
+  summary: (listingId: string, mois: string, token: string) =>
+    request<PaymentSummaryRow[]>(
+      `/listings/${listingId}/payments/summary?mois=${mois}`,
+      { token },
+    ),
+
+  markPaid: (
+    paymentId: string,
+    body: { methode: "interac" | "comptant" },
+    token: string,
+  ) => request<Payment>(`/payments/${paymentId}/pay`, { method: "PATCH", body, token }),
+};
+
 export { API_URL };
 
 // Les photos sont stockées avec une URL relative (ex: /uploads/listings/x.jpg)

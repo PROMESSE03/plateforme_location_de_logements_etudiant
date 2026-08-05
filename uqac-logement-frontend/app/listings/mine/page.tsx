@@ -132,6 +132,12 @@ export default function MyListingsPage() {
                   >
                     {statut.label}
                   </span>
+                  <Link
+                    href={`/listings/${listing.id}/manage`}
+                    className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink transition-colors hover:border-primary hover:text-primary"
+                  >
+                    Gérer
+                  </Link>
                   <button
                     onClick={() =>
                       setPhotoBoxOpenFor(photoBoxOpen ? null : listing.id)

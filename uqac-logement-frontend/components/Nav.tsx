@@ -58,9 +58,15 @@ export function Nav() {
         </Link>
 
         {/* Menu complet — visible seulement à partir des écrans moyens (md) */}
-        <nav className="hidden items-center gap-6 text-sm md:flex">
+        <nav className="hidden items-center gap-6 text-sm lg:flex">
           <NavLink href="/" active={isBrowseActive}>
             Annonces
+          </NavLink>
+          <NavLink href="/#carte" active={false}>
+            Carte
+          </NavLink>
+          <NavLink href="/#contact" active={false}>
+            Contact
           </NavLink>
 
           {user ? (
@@ -104,7 +110,7 @@ export function Nav() {
         {/* Bouton hamburger — visible seulement sur petit écran */}
         <button
           onClick={() => setMobileOpen((v) => !v)}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-ink md:hidden"
+          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border text-ink lg:hidden"
           aria-label="Ouvrir le menu"
         >
           {mobileOpen ? (
@@ -121,10 +127,20 @@ export function Nav() {
 
       {/* Menu déroulant mobile */}
       {mobileOpen && (
-        <nav className="flex flex-col gap-1 border-t border-border px-6 py-4 text-sm md:hidden">
+        <nav className="flex flex-col gap-1 border-t border-border px-6 py-4 text-sm lg:hidden">
           <div className="py-2">
             <NavLink href="/" active={isBrowseActive} onClick={closeMobile}>
               Annonces
+            </NavLink>
+          </div>
+          <div className="py-2">
+            <NavLink href="/#carte" active={false} onClick={closeMobile}>
+              Carte
+            </NavLink>
+          </div>
+          <div className="py-2">
+            <NavLink href="/#contact" active={false} onClick={closeMobile}>
+              Contact
             </NavLink>
           </div>
 

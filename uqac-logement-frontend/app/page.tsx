@@ -1,9 +1,25 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
+import dynamic from "next/dynamic";
 import { api, Listing, ApiError } from "@/lib/api";
 import { ListingCard } from "@/components/ListingCard";
 import { HeroCarousel } from "@/components/HeroCarousel";
+import { ContactForm } from "@/components/ContactForm";
+
+// Leaflet accède à `window` dès son chargement — impossible à rendre côté
+// serveur, donc on le charge uniquement dans le navigateur.
+const ListingsMap = dynamic(
+  () => import("@/components/ListingsMap").then((mod) => mod.ListingsMap),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-full w-full items-center justify-center text-ink-muted">
+        Chargement de la carte...
+      </div>
+    ),
+  },
+);
 
 const TYPES = [
   { value: "", label: "Tous les types" },
@@ -132,6 +148,37 @@ export default function HomePage() {
             </div>
           </>
         )}
+      </section>
+
+      {/* Carte */}
+      <section id="carte" className="border-t border-border bg-surface py-12">
+        <div className="mx-auto max-w-6xl px-6">
+          <h2 className="font-display text-2xl font-semibold text-ink">
+            Toutes les annonces sur la carte
+          </h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Repère orange = campus de l&apos;UQAC. Épingles vertes =
+            logements disponibles.
+          </p>
+          <div className="mt-6 h-[420px] w-full overflow-hidden rounded-2xl border border-border">
+            <ListingsMap listings={listings} />
+          </div>
+        </div>
+      </section>
+
+      {/* Contact */}
+      <section id="contact" className="border-t border-border bg-paper py-12">
+        <div className="mx-auto max-w-2xl px-6">
+          <h2 className="font-display text-2xl font-semibold text-ink">
+            Une question ?
+          </h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Écris-nous, on te répond directement par courriel.
+          </p>
+          <div className="mt-6">
+            <ContactForm />
+          </div>
+        </div>
       </section>
     </div>
   );

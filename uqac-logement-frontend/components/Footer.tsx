@@ -33,6 +33,16 @@ export function Footer() {
                   Publier une annonce
                 </Link>
               </li>
+              <li>
+                <Link href="/#carte" className="text-ink-muted hover:text-ink">
+                  Carte
+                </Link>
+              </li>
+              <li>
+                <Link href="/#contact" className="text-ink-muted hover:text-ink">
+                  Contact
+                </Link>
+              </li>
             </ul>
           </div>
 
