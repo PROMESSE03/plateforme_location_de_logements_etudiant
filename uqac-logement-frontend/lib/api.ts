@@ -74,6 +74,18 @@ export const api = {
 
   me: (token: string) => request<User>("/users/me", { token }),
 
+  forgotPassword: (email: string) =>
+    request<{ message: string }>("/auth/forgot-password", {
+      method: "POST",
+      body: { email },
+    }),
+
+  resetPassword: (token: string, newPassword: string) =>
+    request<{ message: string }>("/auth/reset-password", {
+      method: "POST",
+      body: { token, newPassword },
+    }),
+
   searchListings: (params: {
     prix_max?: number;
     prix_min?: number;
@@ -229,6 +241,21 @@ export const paymentsApi = {
     body: { methode: "interac" | "comptant" },
     token: string,
   ) => request<Payment>(`/payments/${paymentId}/pay`, { method: "PATCH", body, token }),
+};
+
+// ============ INTERESTS ============
+export interface Interest {
+  id: string;
+  tenant: { id: string; nom: string; email: string };
+  createdAt: string;
+}
+
+export const interestsApi = {
+  markInterested: (listingId: string, token: string) =>
+    request<Interest>(`/listings/${listingId}/interest`, { method: "POST", token }),
+
+  listByListing: (listingId: string, token: string) =>
+    request<Interest[]>(`/listings/${listingId}/interest`, { token }),
 };
 
 export { API_URL };

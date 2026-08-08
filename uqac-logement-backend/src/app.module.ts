@@ -10,6 +10,7 @@ import { ListingsModule } from './listings/listings.module';
 import { RoomsModule } from './rooms/rooms.module';
 import { TenanciesModule } from './tenancies/tenancies.module';
 import { PaymentsModule } from './payments/payments.module';
+import { InterestsModule } from './interests/interests.module';
 import { User } from './users/entities/user.entity';
 import { UserRole } from './users/entities/user-role.entity';
 import { Listing } from './listings/entities/listing.entity';
@@ -17,6 +18,7 @@ import { ListingPhoto } from './listings/entities/listing-photo.entity';
 import { Room } from './rooms/entities/room.entity';
 import { Tenancy } from './tenancies/entities/tenancy.entity';
 import { Payment } from './payments/entities/payment.entity';
+import { Interest } from './interests/entities/interest.entity';
 
 @Module({
   imports: [
@@ -40,6 +42,7 @@ import { Payment } from './payments/entities/payment.entity';
           Room,
           Tenancy,
           Payment,
+          Interest,
         ],
         // synchronize: true est pratique en développement (crée les tables
         // automatiquement à partir des entités) mais À DÉSACTIVER en
@@ -53,6 +56,7 @@ import { Payment } from './payments/entities/payment.entity';
     RoomsModule,
     TenanciesModule,
     PaymentsModule,
+    InterestsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

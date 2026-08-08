@@ -33,6 +33,15 @@ export class User {
   @OneToMany(() => UserRole, (userRole) => userRole.user, { eager: true })
   roles: UserRole[];
 
+  // Champs pour "mot de passe oublié" — jamais exposés dans les réponses API
+  @Exclude()
+  @Column({ name: 'reset_password_token', type: 'varchar', nullable: true })
+  resetPasswordToken: string | null;
+
+  @Exclude()
+  @Column({ name: 'reset_password_expires', type: 'timestamp', nullable: true })
+  resetPasswordExpires: Date | null;
+
   @CreateDateColumn({ name: 'created_at' })
   createdAt: Date;
 

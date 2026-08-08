@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
-import { api, Listing, ApiError, photoUrl } from "@/lib/api";
+import { api, Listing, ApiError, photoUrl, interestsApi } from "@/lib/api";
 import { distanceFromUqacKm, formatDistance } from "@/lib/uqac";
+import { useAuth } from "@/lib/auth-context";
 
 const TYPE_LABELS: Record<string, string> = {
   chambre: "Chambre",
@@ -16,10 +17,26 @@ const TYPE_LABELS: Record<string, string> = {
 export default function ListingDetailPage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
+  const { user, token } = useAuth();
   const [listing, setListing] = useState<Listing | null>(null);
   const [activePhoto, setActivePhoto] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [interestSent, setInterestSent] = useState(false);
+  const [interestSending, setInterestSending] = useState(false);
+
+  async function handleMarkInterested() {
+    if (!token) return;
+    setInterestSending(true);
+    try {
+      await interestsApi.markInterested(params.id, token);
+      setInterestSent(true);
+    } catch {
+      // Silencieux : au pire le clic n'a rien fait, l'utilisateur peut réessayer
+    } finally {
+      setInterestSending(false);
+    }
+  }
 
   useEffect(() => {
     api
@@ -139,18 +156,38 @@ export default function ListingDetailPage() {
       <div className="rounded-2xl border border-border bg-surface p-6">
         <h2 className="font-display text-lg font-semibold text-ink">Propriétaire</h2>
         <p className="mt-1 text-ink-muted">{listing.owner.nom}</p>
-        <a
-          href={`mailto:${listing.owner.email}?subject=${encodeURIComponent(
-            "Intéressé(e) par : " + listing.titre,
-          )}`}
-          className="mt-4 inline-block rounded-full bg-primary px-5 py-2.5 font-medium text-white transition-colors hover:bg-primary-dark"
-        >
-          Contacter par courriel
-        </a>
-        <p className="mt-2 text-xs text-ink-muted">
-          La messagerie intégrée arrive bientôt — pour l&apos;instant, un
-          courriel direct.
-        </p>
+        <div className="mt-4 flex flex-wrap gap-3">
+          <a
+            href={`mailto:${listing.owner.email}?subject=${encodeURIComponent(
+              "Intéressé(e) par : " + listing.titre,
+            )}`}
+            className="inline-block rounded-full bg-primary px-5 py-2.5 font-medium text-white transition-colors hover:bg-primary-dark"
+          >
+            Contacter par courriel
+          </a>
+
+          {user && (
+            <button
+              onClick={handleMarkInterested}
+              disabled={interestSending || interestSent}
+              className="inline-block rounded-full border border-primary px-5 py-2.5 font-medium text-primary transition-colors hover:bg-primary/5 disabled:opacity-60"
+            >
+              {interestSent
+                ? "✓ Le propriétaire est prévenu"
+                : interestSending
+                  ? "..."
+                  : "Je suis intéressé(e)"}
+            </button>
+          )}
+        </div>
+        {!user && (
+          <p className="mt-3 text-xs text-ink-muted">
+            <Link href="/login" className="text-primary hover:underline">
+              Connecte-toi
+            </Link>{" "}
+            pour signaler ton intérêt directement au propriétaire.
+          </p>
+        )}
       </div>
     </div>
   );

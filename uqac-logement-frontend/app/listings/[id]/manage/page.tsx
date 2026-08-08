@@ -9,8 +9,10 @@ import {
   roomsApi,
   tenanciesApi,
   paymentsApi,
+  interestsApi,
   Room,
   PaymentSummaryRow,
+  Interest,
   ApiError,
 } from "@/lib/api";
 
@@ -65,6 +67,23 @@ export default function ManageListingPage() {
   const [summaryError, setSummaryError] = useState<string | null>(null);
   const [markingPaidId, setMarkingPaidId] = useState<string | null>(null);
 
+  // Locataires intéressés
+  const [interests, setInterests] = useState<Interest[]>([]);
+  const [loadingInterests, setLoadingInterests] = useState(true);
+
+  const fetchInterests = useCallback(async () => {
+    if (!token) return;
+    setLoadingInterests(true);
+    try {
+      const data = await interestsApi.listByListing(listingId, token);
+      setInterests(data);
+    } catch {
+      // Non bloquant : si ça échoue, la section reste juste vide
+    } finally {
+      setLoadingInterests(false);
+    }
+  }, [listingId, token]);
+
   const fetchRooms = useCallback(async () => {
     if (!token) return;
     setLoadingRooms(true);
@@ -112,8 +131,9 @@ export default function ManageListingPage() {
           });
         });
       fetchRooms();
+      fetchInterests();
     }
-  }, [authLoading, user, token, listingId, fetchRooms]);
+  }, [authLoading, user, token, listingId, fetchRooms, fetchInterests]);
 
   useEffect(() => {
     if (token) fetchSummary();
@@ -209,6 +229,41 @@ export default function ManageListingPage() {
       <h1 className="mt-2 font-display text-3xl font-semibold text-ink">
         Gérer : {listingTitre || "..."}
       </h1>
+
+      {/* ============ LOCATAIRES INTÉRESSÉS ============ */}
+      {!loadingInterests && interests.length > 0 && (
+        <section className="mt-10">
+          <h2 className="font-display text-xl font-semibold text-ink">
+            Locataires intéressés
+          </h2>
+          <p className="mt-1 text-sm text-ink-muted">
+            Ces personnes ont cliqué &quot;Je suis intéressé(e)&quot; sur
+            cette annonce. Copie leur email pour les louer sur une chambre
+            ci-dessous.
+          </p>
+          <div className="mt-3 flex flex-col gap-2">
+            {interests.map((interest) => (
+              <div
+                key={interest.id}
+                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border bg-surface px-4 py-3"
+              >
+                <div>
+                  <p className="text-sm font-medium text-ink">
+                    {interest.tenant.nom}
+                  </p>
+                  <p className="text-xs text-ink-muted">{interest.tenant.email}</p>
+                </div>
+                <button
+                  onClick={() => navigator.clipboard.writeText(interest.tenant.email)}
+                  className="rounded-full border border-border px-3 py-1.5 text-xs font-medium text-ink hover:border-primary hover:text-primary"
+                >
+                  Copier l&apos;email
+                </button>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* ============ CHAMBRES ============ */}
       <section className="mt-10">

@@ -62,9 +62,6 @@ export function Nav() {
           <NavLink href="/" active={isBrowseActive}>
             Annonces
           </NavLink>
-          <NavLink href="/#carte" active={false}>
-            Carte
-          </NavLink>
           <NavLink href="/#contact" active={false}>
             Contact
           </NavLink>
@@ -131,11 +128,6 @@ export function Nav() {
           <div className="py-2">
             <NavLink href="/" active={isBrowseActive} onClick={closeMobile}>
               Annonces
-            </NavLink>
-          </div>
-          <div className="py-2">
-            <NavLink href="/#carte" active={false} onClick={closeMobile}>
-              Carte
             </NavLink>
           </div>
           <div className="py-2">

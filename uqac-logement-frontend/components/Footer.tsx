@@ -34,11 +34,6 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/#carte" className="text-ink-muted hover:text-ink">
-                  Carte
-                </Link>
-              </li>
-              <li>
                 <Link href="/#contact" className="text-ink-muted hover:text-ink">
                   Contact
                 </Link>

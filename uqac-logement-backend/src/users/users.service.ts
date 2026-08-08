@@ -73,6 +73,35 @@ export class UsersService {
     return this.findByIdOrFail(userId);
   }
 
+  async setResetToken(
+    userId: string,
+    hashedToken: string,
+    expires: Date,
+  ): Promise<void> {
+    await this.usersRepo.update(userId, {
+      resetPasswordToken: hashedToken,
+      resetPasswordExpires: expires,
+    });
+  }
+
+  async findByValidResetToken(hashedToken: string): Promise<User | null> {
+    const user = await this.usersRepo.findOne({
+      where: { resetPasswordToken: hashedToken },
+    });
+    if (!user || !user.resetPasswordExpires) return null;
+    if (user.resetPasswordExpires.getTime() < Date.now()) return null;
+    return user;
+  }
+
+  async resetPassword(userId: string, newPassword: string): Promise<void> {
+    const passwordHash = await bcrypt.hash(newPassword, 10);
+    await this.usersRepo.update(userId, {
+      passwordHash,
+      resetPasswordToken: null,
+      resetPasswordExpires: null,
+    });
+  }
+
   // Ne jamais renvoyer passwordHash dans les réponses API
   toPublic(user: User) {
     const { passwordHash, ...publicUser } = user;
