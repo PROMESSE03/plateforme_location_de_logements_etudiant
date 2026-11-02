@@ -51,3 +51,30 @@ body {
   outline-offset: 2px;
 }
 
+/* Bulle d'annonce sur la carte : la photo va jusqu'aux bords */
+.listing-popup .leaflet-popup-content-wrapper {
+  padding: 0;
+  overflow: hidden;
+  border-radius: 16px;
+}
+
+.listing-popup .leaflet-popup-content {
+  margin: 0;
+  font-size: inherit;
+  line-height: 1.4;
+}
+
+.listing-popup.leaflet-popup a.leaflet-popup-close-button {
+  top: 8px;
+  right: 8px;
+  display: flex;
+  width: 26px;
+  height: 26px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  background: var(--color-surface);
+  color: var(--color-ink);
+  box-shadow: 0 1px 4px rgb(0 0 0 / 0.25);
+}
+

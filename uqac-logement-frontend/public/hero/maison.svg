@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#16293e"/><stop offset="1" stop-color="#2c4a6e"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#ciel)"/>
+  <circle cx="1420" cy="140" r="52" fill="#f3ead8"/>
+  <g fill="#f3ead8" opacity=".7">
+    <circle cx="820" cy="110" r="4"/><circle cx="1010" cy="70" r="3"/><circle cx="1230" cy="210" r="3"/><circle cx="900" cy="250" r="3"/><circle cx="1530" cy="300" r="4"/>
+  </g>
+  <path d="M640 720l180-300 90 130 120-190 240 240 170-160 160 170v290H640z" fill="#1d3550"/>
+  <path d="M860 780V430l280-200 280 200v350z" fill="#c34e36"/>
+  <path d="M810 460l330-250 330 250-34 42-296-222-296 222z" fill="#f3ead8"/>
+  <rect x="1090" y="600" width="100" height="180" fill="#123f34"/>
+  <circle cx="1172" cy="695" r="7" fill="#e8c26a"/>
+  <rect x="930" y="520" width="110" height="110" fill="#ffd98a"/>
+  <rect x="1240" y="520" width="110" height="110" fill="#ffd98a"/>
+  <path d="M985 520v110M930 575h110M1295 520v110M1240 575h110" stroke="#7a2f1f" stroke-width="8"/>
+  <path d="M0 800c400-50 1100-50 1600 0v100H0z" fill="#f3ead8"/>
+</svg>

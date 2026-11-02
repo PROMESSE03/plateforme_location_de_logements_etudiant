@@ -1,4 +1,9 @@
-const API_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:3001";
+// Par défaut, l'API est sur la même machine que le frontend : on réutilise
+// l'adresse de la page, car « localhost » désignerait le téléphone lui-même
+// quand le site est ouvert depuis le réseau local.
+const API_URL =
+  process.env.NEXT_PUBLIC_API_URL ??
+  `http://${typeof window === "undefined" ? "localhost" : window.location.hostname}:3001`;
 
 export class ApiError extends Error {
   status: number;

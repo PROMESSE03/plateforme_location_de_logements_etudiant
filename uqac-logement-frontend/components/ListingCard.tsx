@@ -2,7 +2,7 @@ import Link from "next/link";
 import { Listing, photoUrl } from "@/lib/api";
 import { distanceFromUqacKm, formatDistance } from "@/lib/uqac";
 
-const TYPE_LABELS: Record<string, string> = {
+export const TYPE_LABELS: Record<string, string> = {
   chambre: "Chambre",
   appartement: "Appartement",
   studio: "Studio",

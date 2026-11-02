@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1600 900">
+  <defs>
+    <linearGradient id="mur" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#1f6f5c"/><stop offset="1" stop-color="#123f34"/></linearGradient>
+    <linearGradient id="ciel" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f4c98a"/><stop offset="1" stop-color="#e9896a"/></linearGradient>
+  </defs>
+  <rect width="1600" height="900" fill="url(#mur)"/>
+  <rect x="900" y="110" width="480" height="560" fill="url(#ciel)"/>
+  <circle cx="1230" cy="430" r="62" fill="#fff1d6"/>
+  <path d="M900 560l90-70 90 50 110-90 100 70 90-40v240H900z" fill="#2c5a4f"/>
+  <path d="M900 620l130-40 120 40 120-50 110 40v60H900z" fill="#164a3e"/>
+  <g fill="none" stroke="#f3ead8" stroke-width="16">
+    <rect x="900" y="110" width="480" height="560"/>
+    <line x1="1140" y1="110" x2="1140" y2="670"/>
+    <line x1="900" y1="370" x2="1380" y2="370"/>
+  </g>
+  <rect x="860" y="670" width="560" height="26" rx="4" fill="#f3ead8"/>
+  <path d="M1310 670v-50h60v50z" fill="#c34e36"/>
+  <path d="M1340 622c-34-20-40-60-30-84 26 12 40 44 30 84zm0 0c6-36 30-58 54-60 0 30-20 54-54 60z" fill="#7fbf8e"/>
+  <rect y="840" width="1600" height="60" fill="#0d2b24"/>
+</svg>

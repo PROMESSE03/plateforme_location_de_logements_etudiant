@@ -1,111 +1,90 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 
 interface Slide {
-  gradient: string;
-  icon: React.ReactNode;
+  image: string;
   title: string;
   subtitle: string;
 }
 
-// Icônes en traits simples, décoratives, en arrière-plan de chaque scène.
-const IconWindow = () => (
-  <svg viewBox="0 0 200 200" fill="none" stroke="white" strokeWidth="1.5">
-    <rect x="40" y="30" width="120" height="140" rx="4" />
-    <line x1="100" y1="30" x2="100" y2="170" />
-    <line x1="40" y1="100" x2="160" y2="100" />
-  </svg>
-);
-
-const IconDoor = () => (
-  <svg viewBox="0 0 200 200" fill="none" stroke="white" strokeWidth="1.5">
-    <rect x="60" y="20" width="80" height="160" rx="4" />
-    <circle cx="120" cy="100" r="3" fill="white" stroke="none" />
-    <path d="M40 180h120" />
-  </svg>
-);
-
-const IconPlantLamp = () => (
-  <svg viewBox="0 0 200 200" fill="none" stroke="white" strokeWidth="1.5">
-    <path d="M100 180V90" />
-    <path d="M100 90c0-30-25-40-40-35 5 25 20 40 40 35Z" />
-    <path d="M100 90c0-25 20-35 35-30-5 22-18 34-35 30Z" />
-    <ellipse cx="100" cy="182" rx="30" ry="6" />
-  </svg>
-);
-
-const IconKey = () => (
-  <svg viewBox="0 0 200 200" fill="none" stroke="white" strokeWidth="1.5">
-    <circle cx="70" cy="100" r="30" />
-    <line x1="98" y1="120" x2="160" y2="182" />
-    <line x1="130" y1="150" x2="148" y2="132" />
-    <line x1="148" y1="168" x2="166" y2="150" />
-  </svg>
-);
-
-const IconHouse = () => (
-  <svg viewBox="0 0 200 200" fill="none" stroke="white" strokeWidth="1.5">
-    <path d="M30 100 100 40l70 60" />
-    <path d="M50 90v90h100V90" />
-    <rect x="90" y="130" width="20" height="50" />
-  </svg>
-);
-
+// Illustrations provisoires : remplacer les fichiers de public/hero/ par de
+// vraies photos et mettre à jour les chemins ci-dessous.
 const SLIDES: Slide[] = [
   {
-    gradient: "linear-gradient(135deg, #1f6f5c 0%, #123f34 100%)",
-    icon: <IconWindow />,
+    image: "/hero/fenetre.svg",
     title: "Ton prochain chez-toi, à distance de marche de l'UQAC",
     subtitle: "Chambres, studios et appartements près du campus",
   },
   {
-    gradient: "linear-gradient(135deg, #c34e36 0%, #7a2f1f 100%)",
-    icon: <IconDoor />,
+    image: "/hero/porte.svg",
     title: "Des propriétaires du Saguenay, pas des intermédiaires",
     subtitle: "Publie ou trouve un logement, directement",
   },
   {
-    gradient: "linear-gradient(135deg, #164a3e 0%, #0d2b24 100%)",
-    icon: <IconPlantLamp />,
+    image: "/hero/chambre.svg",
     title: "La distance réelle du campus, sur chaque annonce",
     subtitle: "Fini les surprises une fois sur place",
   },
   {
-    gradient: "linear-gradient(135deg, #b98a2e 0%, #6e510f 100%)",
-    icon: <IconKey />,
+    image: "/hero/cles.svg",
     title: "Gère tes locataires et tes paiements facilement",
     subtitle: "Chambres, loyers et retards suivis automatiquement",
   },
   {
-    gradient: "linear-gradient(135deg, #2c4a6e 0%, #16293e 100%)",
-    icon: <IconHouse />,
+    image: "/hero/maison.svg",
     title: "Ton chez-toi étudiant t'attend",
     subtitle: "Commence ta recherche dès maintenant",
   },
 ];
 
+// Distance minimale (en px) pour qu'un glissement change de diapositive.
+const SWIPE_THRESHOLD = 50;
+
 export function HeroCarousel() {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
+  const swipeStartX = useRef<number | null>(null);
 
   const next = useCallback(() => {
     setIndex((i) => (i + 1) % SLIDES.length);
   }, []);
 
+  const previous = useCallback(() => {
+    setIndex((i) => (i - 1 + SLIDES.length) % SLIDES.length);
+  }, []);
+
+  // index en dépendance : le délai repart à zéro après chaque changement,
+  // pour qu'un glissement ne soit pas suivi aussitôt d'un défilement auto.
   useEffect(() => {
     if (paused) return;
     const timer = setInterval(next, 5000);
     return () => clearInterval(timer);
-  }, [paused, next]);
+  }, [paused, next, index]);
+
+  function handlePointerUp(e: React.PointerEvent) {
+    if (swipeStartX.current === null) return;
+    const distance = e.clientX - swipeStartX.current;
+    swipeStartX.current = null;
+    if (Math.abs(distance) < SWIPE_THRESHOLD) return;
+    if (distance < 0) next();
+    else previous();
+  }
 
   const slide = SLIDES[index];
 
   return (
     <div
-      className="relative h-[420px] w-full overflow-hidden sm:h-[480px]"
+      className="relative h-[420px] w-full touch-pan-y select-none overflow-hidden sm:h-[480px]"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
+      onPointerDown={(e) => {
+        swipeStartX.current = e.clientX;
+      }}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={() => {
+        swipeStartX.current = null;
+      }}
     >
       {SLIDES.map((s, i) => (
         <div
@@ -113,10 +92,13 @@ export function HeroCarousel() {
           className="absolute inset-0 transition-opacity duration-700 ease-in-out"
           style={{ opacity: i === index ? 1 : 0 }}
         >
-          <div className="absolute inset-0" style={{ background: s.gradient }} />
-          <div className="absolute -right-10 bottom-0 h-[420px] w-[420px] opacity-20 sm:h-[520px] sm:w-[520px]">
-            {s.icon}
-          </div>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={s.image}
+            alt=""
+            draggable={false}
+            className="absolute inset-0 h-full w-full object-cover"
+          />
           {/* Voile sombre pour la lisibilité du texte */}
           <div className="absolute inset-0 bg-ink/30" />
         </div>
